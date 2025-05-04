@@ -1,22 +1,64 @@
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $codigo = $_POST['txtCodigo'];
-    $acao = $_POST['txtAcao'];
-    $qtde = $_POST['txtQtde'];
+include_once 'Produto.php'; 
+session_start(); 
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    if ($acao === 'aumentar') {
-        echo "Aumentando estoque do produto código <strong>$codigo</strong> em <strong>$qtde unidades</strong>.";
-    } elseif ($acao === 'desconto') {
-        echo "Aplicando desconto de <strong>$qtde%</strong> no produto código <strong>$codigo</strong>.";
+    if (isset($_POST['txtAcao']) && isset($_POST['txtCodigo']) && isset($_POST['txtQtde'])) {
+        $acao = $_POST['txtAcao']; 
+        $codigo = $_POST['txtCodigo'];
+        $quantidade = floatval($_POST['txtQtde']); 
+
+        if (!isset($_SESSION['produto'])) {
+            echo "Erro: Produto não encontrado na sessão.<br>";
+            exit; 
+        }
+
+        $produto = $_SESSION['produto']; 
+
+        switch ($acao) {
+            case 1: 
+                echo "Adicionando {$quantidade} unidades ao estoque do produto com código {$codigo}.<br>";
+                $produto->adicionarEstoque($quantidade); 
+                break;
+
+            case 2: 
+                echo "Reduzindo {$quantidade} unidades do estoque do produto com código {$codigo}.<br>";
+                $produto->reduzirEstoque($quantidade); 
+                break;
+
+            case 3: 
+                echo "Estoque do produto com código {$codigo}: {$produto->consultarEstoque()} unidades.<br>";
+                break;
+
+            case 4:
+                echo "Exibindo informações do produto com código {$produto->getCodigo()}:<br>";
+                $produto->exibirProduto(); 
+                break;
+
+            case 5:
+                echo "Calculando imposto do produto com código {$codigo}: R$ " . number_format($produto->calcularImposto(), 2, ',', '.') . "<br>";
+                break;
+
+            case 6:
+                $percentual = floatval($quantidade); 
+                echo "Aplicando um desconto de {$percentual}% no preço do produto com código {$codigo}.<br>";
+                
+                $novoPreco = $produto->getPreco();  
+                $novoPrecoComDesconto = $produto->aplicarDesconto($novoPreco, $percentual); 
+                
+                echo "Novo preço com desconto: R$ " . number_format($novoPrecoComDesconto, 2, ',', '.') . "<br>";
+                break;
+
+            default:
+                echo "Ação inválida!<br>";
+                break;
+        }
     } else {
-        echo "Ação inválida ou não selecionada.";
+        echo "Erro: Todos os campos são obrigatórios!<br>";
     }
-
-
 }
 ?>
-
 
 
 <!DOCTYPE html>

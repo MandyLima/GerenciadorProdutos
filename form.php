@@ -1,72 +1,88 @@
 <?php
-   $nome = $codigo = $categoria = $tipo = $estoque = $preco = "";
-   $estoque = isset($_POST["txtEstoque"]) ? (int)$_POST["txtEstoque"] : 0;
-   
-   // Verifica se algum botão foi pressionado
-   if ($_SERVER["REQUEST_METHOD"] == "POST") {
-       if (isset($_POST["aumentar"])) {
-           $estoque++;
-       } elseif (isset($_POST["diminuir"])) {
-           $estoque = max(0, $estoque - 1);
-       } elseif (isset($_POST["cadastrar"])) {
-           $nome = $_POST["txtNome"];
-           $codigo = $_POST["txtCodigo"];
-           $categoria = $_POST["txtCategoria"];
-           $tipo = $_POST["txtTipo"];
-           $preco = $_POST["txtPreco"];
-       }
-   }
+session_start();  // inicia sessao
+
+include("Produto.php"); 
+
+$nome = $codigo = $categoria = $tipo = $estoque = $preco = "";
+$produto = null;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["cadastrar"])) {
+    $nome = $_POST["txtNome"] ?? '';
+    $codigo = $_POST["txtCodigo"] ?? '';
+    $categoria = $_POST["txtCategoria"] ?? '';
+    $tipo = $_POST["txtTipo"] ?? '';
+    $estoque = isset($_POST["txtEstoque"]) ? (int)$_POST["txtEstoque"] : 0;
+    $preco = isset($_POST["txtPreco"]) ? (float)$_POST["txtPreco"] : 0.0;  
+
+    if ($tipo === 'Físico') {
+        $produto = new ProdutoFisico($nome, $codigo, $categoria, $estoque, $preco);
+    } elseif ($tipo === 'Digital') {
+        $produto = new ProdutoDigital($nome, $codigo, $categoria, $estoque, $preco);
+    }
+
+    $_SESSION['produto'] = $produto;
+
+    echo "Produto cadastrado com sucesso!<br>";
+    echo "Produto armazenado na sessão: " . $produto->getNome();  
+}
 ?>
 
 
-
 <!DOCTYPE html>
-<html lang="pt-bt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
 </head>
-<body>
+<body class="container mt-4">
     <h1>Gerenciador de Produtos</h1>    
     <form action="#" method="post">
-        <label>Nome:</label>
-        <input type="text" name="txtNome"><br>
-        
-        <label>Codigo:</label>
-        <input type="text" name="txtCodigo"><br>
-       
-        <label>Categoria:</label>
-        <input type="text" name="txtCategoria"><br>
+        <div class="mb-3">
+            <label>Nome:</label>
+            <input type="text" name="txtNome" class="form-control" value="<?= htmlspecialchars($nome) ?>">
+        </div>
 
         <div class="mb-3">
-                <label for="tipo" class="form-label">Tipo:</label>
-                <select class="form-select" id="tipo" name="txtTipo">
-                    <option selected disabled>Selecione uma ação...</option>
-                    <option value="Físico">Físico</option>
-                    <option value="Digital">Digital</option>
-                </select>
-            </div>
+            <label>Código:</label>
+            <input type="text" name="txtCodigo" class="form-control" value="<?= htmlspecialchars($codigo) ?>">
+        </div>
 
-        <label>Estoque:</label>
-        <input type="text" name="txtEstoque"><br>
+        <div class="mb-3">
+            <label>Categoria:</label>
+            <input type="text" name="txtCategoria" class="form-control" value="<?= htmlspecialchars($categoria) ?>">
+        </div>
 
+        <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo:</label>
+            <select class="form-select" id="tipo" name="txtTipo">
+                <option disabled <?= $tipo == "" ? "selected" : "" ?>>Selecione uma opção...</option>
+                <option value="Físico" <?= $tipo === "Físico" ? "selected" : "" ?>>Físico</option>
+                <option value="Digital" <?= $tipo === "Digital" ? "selected" : "" ?>>Digital</option>
+            </select>
+        </div>
 
-        <label>Preço:</label>
-        <input type="text" name="txtPreco" value="<?= htmlspecialchars($preco) ?>"><br>
+        <div class="mb-3">
+            <label>Estoque:</label>
+            <input type="number" name="txtEstoque" class="form-control" value="<?= htmlspecialchars($estoque) ?>">
+        </div>
 
-        <input type="submit" name="cadastrar" value="Cadastrar">
+        <div class="mb-3">
+            <label>Preço:</label>
+            <input type="text" name="txtPreco" class="form-control" value="<?= htmlspecialchars($preco) ?>">
+        </div>
 
+        <input type="submit" name="cadastrar" value="Cadastrar" class="btn btn-primary">
     </form>
+
     <br>
+
+    <?php
+    if ($produto) {
+        echo "<h3>Produto Cadastrado:</h3>";
+        $produto->exibirProduto();
+    }
+    ?>
 </body>
 </html>
- 
-<?php
- include("Produto.php");
- $produto = new Produto($nome, $codigo, $categoria,$tipo, $estoque, $preco);
- $produto->exibirProduto();
- ?>
